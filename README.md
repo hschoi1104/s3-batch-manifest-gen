@@ -1,0 +1,1 @@
+# s3-manifest-generator-for-batch-operations
