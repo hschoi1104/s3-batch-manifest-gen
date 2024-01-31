@@ -4,7 +4,6 @@ import {
   ListObjectsV2CommandOutput,
   _Object,
 } from '@aws-sdk/client-s3';
-import { fromIni } from '@aws-sdk/credential-providers'; // ES6 import
 import { parseISO, format, eachDayOfInterval } from 'date-fns';
 
 import fs from 'fs';
@@ -44,7 +43,7 @@ export async function main() {
   });
   const { sourceBucket, contextPath } = args;
   const { from, to, output } = args;
-  const client = new S3Client({ credentials: fromIni() });
+  const client = new S3Client({});
   const fromDate = parseISO(from);
   const toDate = parseISO(to);
 
