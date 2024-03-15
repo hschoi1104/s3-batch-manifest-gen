@@ -1,12 +1,10 @@
 # s3-batch-manifest-gen
 
-> format = `${bucket}/${contextPath}/dt=${from..to}` all objects
+> format = `${bucket}/${contextPath}/` all objects
 
 For example
 
 - bucket: archiveBucket
-- from: 2023-01-24
-- to: 2023-01-25
 - contextPath = dev/logs
 - output = manifext.csv
 
@@ -20,16 +18,14 @@ CLI options types
 
 ```plaintext
 sourceBucket: string
-from: timestamp(ISO8601 String)
-to: timestamp(ISO8601 String)
+region: string
 contextPath: string(basePath)
 output: string
 ```
 
 ```bash
 npx s3-batch-manifest-gen --sourceBucket=$BUCKET_NAME \
-  --from=2022-06-30 \
-  --to=2023-01-31 \
+  --region=ap-northeast-2
   --output=manifest.csv \
   --contextPath=dev/logs
 ```

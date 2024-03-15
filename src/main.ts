@@ -4,7 +4,6 @@ import {
   ListObjectsV2CommandOutput,
   _Object,
 } from '@aws-sdk/client-s3';
-import { parseISO, format, eachDayOfInterval } from 'date-fns';
 
 import fs from 'fs';
 import minimist from 'minimist';
@@ -33,47 +32,39 @@ async function list(
 export async function main() {
   // cli options
   // --sourceBucket
-  // --contextPath
-  // --from
-  // --to
+  // --region
+  // --contextPath  # /signatures
   // --output
-
   const args = minimist(process.argv.slice(2), {
-    string: ['sourceBucket', 'contextPath', 'fromt', 'to', 'output'],
+    string: ['sourceBucket', 'region', 'contextPath', 'output'],
   });
-  const { sourceBucket, contextPath } = args;
-  const { from, to, output } = args;
-  const client = new S3Client({});
-  const fromDate = parseISO(from);
-  const toDate = parseISO(to);
+  const { sourceBucket, region, contextPath, output } = args;
+  const client = new S3Client({
+    region,
+  });
 
   let hasMoreFiles: boolean | undefined = false;
   let continuationToken: string | undefined | null = null;
   const stream = fs.createWriteStream(output, { flags: 'a' });
 
-  const dates = eachDayOfInterval({
-    start: fromDate,
-    end: toDate,
-  });
+  const prefix = `${contextPath}`;
 
-  for (const index in dates) {
-    const date = dates[index];
-    const prefix = `${contextPath}/dt=${format(date, 'yyyyMMdd')}`;
-    console.log(`bucket: ${sourceBucket}, prefix: ${prefix}`);
-    do {
-      const response: ListObjectsV2CommandOutput = await list(
-        sourceBucket,
-        prefix,
-        1000,
-        continuationToken,
-        client,
-      );
-      response?.Contents?.forEach((object: _Object) => {
-        stream.write(`${sourceBucket},${object.Key}\r\n`);
-      });
-      hasMoreFiles = response.IsTruncated;
-      continuationToken = hasMoreFiles ? response.NextContinuationToken : null;
-    } while (hasMoreFiles);
-  }
+  console.log(`bucket: ${sourceBucket}, prefix: ${prefix}`);
+  do {
+    const response: ListObjectsV2CommandOutput = await list(
+      sourceBucket,
+      prefix,
+      1000,
+      continuationToken,
+      client,
+    );
+    response?.Contents?.forEach((object: _Object) => {
+      stream.write(`${sourceBucket},${object.Key}\r\n`);
+    });
+    hasMoreFiles = response.IsTruncated;
+    continuationToken = hasMoreFiles ? response.NextContinuationToken : null;
+  } while (hasMoreFiles);
+
   stream.end();
+  console.log('done');
 }
